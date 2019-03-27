@@ -125,9 +125,11 @@ namespace Oxide.Patcher
                     IList<Instruction> instructionset = method.Body.Instructions;
                     if (hook.BaseHook != null)
                     {
+                        var assembly = PatcherForm.MainForm.LoadAssembly(hook.AssemblyName);
                         MethodDefinition methoddef = PatcherForm.MainForm.GetMethod(hook.AssemblyName, hook.TypeName, hook.Signature);
+
                         ILWeaver weaver = new ILWeaver(methoddef.Body) { Module = methoddef.Module };
-                        hook.BaseHook.ApplyPatch(methoddef, weaver, PatcherForm.MainForm.OxideAssembly);
+                        hook.BaseHook.ApplyPatch(assembly, methoddef, weaver, PatcherForm.MainForm.OxideAssembly);
                         instructionset = weaver.Instructions;
                     }
                     for (int i = 0; i < instructionset.Count; i++)
@@ -271,8 +273,15 @@ namespace Oxide.Patcher
                     FieldDefinition fieldField = fieldType.Fields.FirstOrDefault(f => f.Name.Equals(fieldData[2]));
                     if (fieldField == null)
                     {
-                        error = $"Field '{fieldData[2]}' not found";
-                        break;
+                        bool found = PatcherForm.MainForm.CurrentProject.Manifests.Any((x) => {
+                            return x.Fields.Any(f => f.AssemblyName.Replace(".dll", "").Equals(fieldData[0]) && f.TypeName.Equals(fieldData[1]) && f.Name.Equals(fieldData[2]));
+                        });
+
+                        if (!found)
+                        {
+                            error = $"Field '{fieldData[2]}' not found";
+                            break;
+                        }
                     }
                     Instruction.Operand = textBox.Text;
                     break;

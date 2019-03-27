@@ -215,11 +215,11 @@ namespace Oxide.Patcher.Hooks
         /// <param name="oxidemodule"></param>
         /// <param name="original"></param>
         /// <param name="patcher"></param>
-        public bool PreparePatch(MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxidemodule, Patching.Patcher patcher = null)
+        public virtual bool PreparePatch(AssemblyDefinition assembly, MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxidemodule, Patching.Patcher patcher = null)
         {
             if (BaseHook != null)
             {
-                return BaseHook.PreparePatch(original, weaver, oxidemodule, patcher) && BaseHook.ApplyPatch(original, weaver, oxidemodule, patcher);
+                return BaseHook.PreparePatch(assembly, original, weaver, oxidemodule, patcher) && BaseHook.ApplyPatch(assembly, original, weaver, oxidemodule, patcher);
             }
             return true;
         }
@@ -231,7 +231,7 @@ namespace Oxide.Patcher.Hooks
         /// <param name="weaver"></param>
         /// <param name="oxidemodule"></param>
         /// <param name="patcher"></param>
-        public abstract bool ApplyPatch(MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxidemodule, Patching.Patcher patcher = null);
+        public abstract bool ApplyPatch(AssemblyDefinition assembly, MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxidemodule, Patching.Patcher patcher = null);
 
         /// <summary>
         /// Creates the settings view control for this hook

@@ -226,9 +226,31 @@ namespace Oxide.Patcher
                                 break;
                             }
                         }
+
                         if (hook.BaseHook == null)
                         {
                             throw new Exception("BaseHook missing: " + hook.BaseHookName);
+                        }
+                    }
+
+                    if (hook is Simple)
+                    {
+                        var simple = hook as Simple;
+                        if (!string.IsNullOrWhiteSpace(simple.DependsOnFieldName))
+                        {
+                            foreach (var field in manifest.Fields)
+                            {
+                                if (field.Name.Equals(simple.DependsOnFieldName))
+                                {
+                                    simple.DependsOnField = field;
+                                    break;
+                                }
+                            }
+
+                            if (simple.DependsOnField == null)
+                            {
+                                throw new Exception("DependsOnField missing: " + simple.DependsOnFieldName);
+                            }
                         }
                     }
                 }

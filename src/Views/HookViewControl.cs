@@ -32,6 +32,7 @@ namespace Oxide.Patcher.Views
 
         private TextEditorControl msilbefore, msilafter, codebefore, codeafter;
 
+        private AssemblyDefinition assembly;
         private MethodDefinition methoddef;
 
         private bool ignoretypechange;
@@ -47,6 +48,7 @@ namespace Oxide.Patcher.Views
         {
             base.OnLoad(e);
 
+            assembly = MainForm.LoadAssembly(Hook.AssemblyName);
             methoddef = MainForm.GetMethod(Hook.AssemblyName, Hook.TypeName, Hook.Signature);
 
             hooktypes = new List<Type>();
@@ -163,7 +165,7 @@ namespace Oxide.Patcher.Views
 
             ILWeaver weaver = new ILWeaver(methoddef.Body) { Module = methoddef.Module };
 
-            Hook.PreparePatch(methoddef, weaver, MainForm.OxideAssembly);
+            Hook.PreparePatch(assembly, methoddef, weaver, MainForm.OxideAssembly);
             msilbefore = new TextEditorControl { Dock = DockStyle.Fill, Text = weaver.ToString(), IsReadOnly = true };
             codebefore = new TextEditorControl
             {
@@ -173,7 +175,7 @@ namespace Oxide.Patcher.Views
                 IsReadOnly = true
             };
 
-            Hook.ApplyPatch(methoddef, weaver, MainForm.OxideAssembly);
+            Hook.ApplyPatch(assembly, methoddef, weaver, MainForm.OxideAssembly);
             msilafter = new TextEditorControl { Dock = DockStyle.Fill, Text = weaver.ToString(), IsReadOnly = true };
             codeafter = new TextEditorControl
             {
@@ -283,11 +285,11 @@ namespace Oxide.Patcher.Views
             {
                 ILWeaver weaver = new ILWeaver(methoddef.Body) { Module = methoddef.Module };
 
-                Hook.PreparePatch(methoddef, weaver, MainForm.OxideAssembly);
+                Hook.PreparePatch(assembly, methoddef, weaver, MainForm.OxideAssembly);
                 msilbefore.Text = weaver.ToString();
                 codebefore.Text = await Decompiler.GetSourceCode(methoddef, weaver);
 
-                Hook.ApplyPatch(methoddef, weaver, MainForm.OxideAssembly);
+                Hook.ApplyPatch(assembly, methoddef, weaver, MainForm.OxideAssembly);
                 msilafter.Text = weaver.ToString();
                 codeafter.Text = await Decompiler.GetSourceCode(methoddef, weaver);
             }

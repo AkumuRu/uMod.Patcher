@@ -1,5 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Newtonsoft.Json;
+using Oxide.Patcher.Fields;
 using Oxide.Patcher.Patching;
 using Oxide.Patcher.Views;
 using System;
@@ -40,7 +42,36 @@ namespace Oxide.Patcher.Hooks
         /// </summary>
         public string ArgumentString { get; set; }
 
-        public override bool ApplyPatch(MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxideassembly, Patching.Patcher patcher = null)
+        /// <summary>
+        /// Gets or sets the filed dependency string
+        /// </summary>
+        public string DependsOnFieldName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the base hook
+        /// </summary>
+        [JsonIgnore]
+        public Field DependsOnField { get; set; }
+
+        /// <summary>
+        /// PrePatches this hook into the target weaver
+        /// </summary>
+        /// <param name="weaver"></param>
+        /// <param name="oxidemodule"></param>
+        /// <param name="original"></param>
+        /// <param name="patcher"></param>
+        public override bool PreparePatch(AssemblyDefinition assembly, MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxidemodule, Patching.Patcher patcher = null)
+        {
+            if (DependsOnField != null)
+            {
+                if (!DependsOnField.Apply(assembly))
+                    return false;
+            }
+
+            return base.PreparePatch(assembly, original, weaver, oxidemodule, patcher);
+        }
+
+        public override bool ApplyPatch(AssemblyDefinition assembly, MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxideassembly, Patching.Patcher patcher = null)
         {
             // Get the call hook method (only grab object parameters: ignore the object[] hook)
             List<MethodDefinition> callhookmethods = oxideassembly.MainModule.Types

@@ -18,7 +18,7 @@ namespace Oxide.Patcher.Hooks
         /// </summary>
         public int InjectionIndex { get; set; }
 
-        public override bool ApplyPatch(MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxideassembly, Patching.Patcher patcher = null)
+        public override bool ApplyPatch(AssemblyDefinition assembly, MethodDefinition original, ILWeaver weaver, AssemblyDefinition oxideassembly, Patching.Patcher patcher = null)
         {
             MethodDefinition initoxidemethod = oxideassembly.MainModule.Types
                 .Single(t => t.FullName == "Oxide.Core.Interface")

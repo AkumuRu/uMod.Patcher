@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Oxide.Patcher.Views;
+using Oxide.Patcher.Patching;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -48,6 +49,35 @@ namespace Oxide.Patcher.Fields
             TypeName = type.FullName;
             FieldType = string.Empty;
             AssemblyName = assembly;
+        }
+
+        public bool Apply(AssemblyDefinition assembly)
+        {
+            string[] fieldData = FieldType.Split('|');
+
+            TypeDefinition target = assembly.MainModule.GetType(TypeName);
+            
+            string newFieldAssemblyFile = Path.Combine(PatcherForm.MainForm.CurrentProject.TargetDirectory, $"{fieldData[0].Replace(".dll", "")}.dll");
+            AssemblyDefinition newFieldAssembly = AssemblyDefinition.ReadAssembly(newFieldAssemblyFile);
+            if (newFieldAssembly == null)
+                return false;
+
+            TypeDefinition newFieldType = newFieldAssembly.MainModule.GetType(fieldData[1]);
+            if (newFieldType == null)
+                return false;
+
+            // patched already
+            if (target.Fields.Any(x => x.Name.Equals(Name)))
+                return true;
+
+            FieldDefinition newField = new FieldDefinition(Name, FieldAttributes.Public | FieldAttributes.NotSerialized, assembly.MainModule.Import(newFieldType))
+            {
+                Constant = null,
+                HasConstant = false
+            };
+
+            target.Fields.Add(newField);
+            return true;
         }
 
         protected void ShowMsg(string msg, string header, Patching.Patcher patcher = null)

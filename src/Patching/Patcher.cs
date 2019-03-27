@@ -215,7 +215,7 @@ namespace Oxide.Patcher.Patching
                         try
                         {
                             // Apply
-                            bool patchApplied = hook.PreparePatch(method, weaver, oxideassembly, this) && hook.ApplyPatch(method, weaver, oxideassembly, this);
+                            bool patchApplied = hook.PreparePatch(assembly, method, weaver, oxideassembly, this) && hook.ApplyPatch(assembly, method, weaver, oxideassembly, this);
                             if (patchApplied)
                             {
                                 weaver.Apply(method.Body);
@@ -642,7 +642,7 @@ namespace Oxide.Patcher.Patching
                         }
                     }
                 }
-
+                
                 // Loop each additional field
                 foreach (Field field in manifest.Fields)
                 {
@@ -658,35 +658,15 @@ namespace Oxide.Patcher.Patching
                         continue;
                     }
 
-                    string[] fieldData = field.FieldType.Split('|');
-
-                    TypeDefinition target = assembly.MainModule.GetType(field.TypeName);
-                    string newFieldAssemblyFile = Path.Combine(PatchProject.TargetDirectory, $"{fieldData[0].Replace(".dll", "")}.dll");
-                    AssemblyDefinition newFieldAssembly = AssemblyDefinition.ReadAssembly(newFieldAssemblyFile);
-                    if (newFieldAssembly == null)
+                    if(!field.Apply(assembly))
                     {
-                        Log($"Failed to add field {field.TypeName}::{field.Name}, the Assembly '{fieldData[0]}' could not be found");
+                        Log($"Failed to add field {field.TypeName}::{field.Name}!");
                         continue;
                     }
-
-                    TypeDefinition newFieldType = newFieldAssembly.MainModule.GetType(fieldData[1]);
-                    if (newFieldType == null)
-                    {
-                        Log($"Failed to add field {field.TypeName}::{field.Name}, the type '{fieldData[1]}' could not be found");
-                        continue;
-                    }
-
-                    FieldDefinition newField = new FieldDefinition(field.Name, FieldAttributes.Public | FieldAttributes.NotSerialized, assembly.MainModule.Import(newFieldType))
-                    {
-                        Constant = null,
-                        HasConstant = false
-                    };
-
-                    target.Fields.Add(newField);
-
+                    
                     Log($"Applied new field {field.Name} to {field.TypeName}");
                 }
-
+                
                 // Save it
                 Log("Saving assembly {0}", manifest.AssemblyName);
                 filename = GetAssemblyFilename(manifest.AssemblyName, false);
